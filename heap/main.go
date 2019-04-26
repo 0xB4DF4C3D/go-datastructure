@@ -7,54 +7,42 @@ import (
 )
 
 type Heap struct {
-	IsMin bool
-	Arr   []int
-	K     int
+	isMin bool
+	k     int
+	arr   []float64
 }
 
-func NewHeap(isMin bool, k int) *Heap {
+func New(isMin bool, k int) *Heap {
 	return &Heap{
-		IsMin: isMin,
-		Arr:   []int{},
-		K:     k,
+		isMin: isMin,
+		k:     k,
+		arr:   []float64{},
 	}
 }
 
 func (h *Heap) String() string {
-	res := ""
-	if h.IsMin == true {
-		res += "{Type: Min, "
-	} else {
-		res += "{Type: Max, "
-	}
-
-	res += fmt.Sprintf("K: %v, Arr: %v}", h.K, h.Arr)
-
-	return res
+	return fmt.Sprintf("%#v", h)
 }
 
-func (h *Heap) Insert(newValue int) {
-	h.Arr = append(h.Arr, newValue)
+func (h *Heap) Insert(newVal float64) {
+	h.arr = append(h.arr, newVal)
 
-	curIdx := len(h.Arr) - 1
-	curVal := h.Arr[curIdx]
-	parentIdx := (curIdx - curIdx%h.K) / h.K
-	parentVal := h.Arr[parentIdx]
+	curIdx := len(h.arr) - 1
+	parentIdx := (curIdx - h.k + 1) / h.k
+	for h.arr[curIdx] != h.arr[parentIdx] && (h.arr[curIdx] < h.arr[parentIdx]) == h.isMin {
 
-	for curVal != parentVal && ((curVal < parentVal) == h.IsMin) {
-		h.Arr[curIdx], h.Arr[parentIdx] = h.Arr[parentIdx], h.Arr[curIdx]
+		h.arr[curIdx], h.arr[parentIdx] = h.arr[parentIdx], h.arr[curIdx]
+
 		curIdx = parentIdx
-		curVal = h.Arr[curIdx]
-		parentIdx = (curIdx - curIdx%h.K) / h.K
-		parentVal = h.Arr[parentIdx]
+		parentIdx = (curIdx - h.k + 1) / h.k
 	}
 }
 
-func (h *Heap) Pop() int {
-	res := h.Arr[0]
+func (h *Heap) Pop() float64 {
+	res := h.arr[0]
 
-	h.Arr[0] = h.Arr[len(h.Arr)-1]
-	h.Arr = h.Arr[:len(h.Arr)-1]
+	h.arr[0] = h.arr[len(h.arr)-1]
+	h.arr = h.arr[:len(h.arr)-1]
 
 	h.Heapify()
 
@@ -62,18 +50,20 @@ func (h *Heap) Pop() int {
 }
 
 func (h *Heap) heapify(curIdx int) {
-	next := curIdx
 
-	for i := 1; i <= h.K; i++ {
-		nextIdx := curIdx*h.K + i
-		if nextIdx < len(h.Arr) && ((h.Arr[next] > h.Arr[nextIdx]) == h.IsMin) {
-			next = nextIdx
+	targetIdx := curIdx
+
+	for i := 1; i <= h.k; i++ {
+		nextIdx := curIdx*h.k + i
+
+		if nextIdx < len(h.arr) && ((h.arr[nextIdx] < h.arr[targetIdx]) == h.isMin) {
+			targetIdx = nextIdx
 		}
 	}
 
-	if next != curIdx {
-		h.Arr[curIdx], h.Arr[next] = h.Arr[next], h.Arr[curIdx]
-		h.heapify(next)
+	if targetIdx != curIdx {
+		h.arr[curIdx], h.arr[targetIdx] = h.arr[targetIdx], h.arr[curIdx]
+		h.heapify(targetIdx)
 	}
 }
 
@@ -81,20 +71,22 @@ func (h *Heap) Heapify() {
 	h.heapify(0)
 }
 
+func (h *Heap) IsEmpty() bool {
+	return len(h.arr) == 0
+}
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	minHeap := NewHeap(true, 2)
-
-	for i := 0; i < 30; i++ {
-		r := rand.Intn(42)
-		minHeap.Insert(r)
-	}
-
+	minHeap := New(false, 2)
 	fmt.Println(minHeap)
-	for len(minHeap.Arr) > 0 {
-		fmt.Println(minHeap.Pop())
-	}
 
+	for i := 0; i < 100; i++ {
+		minHeap.Insert(float64(rand.Intn(100)))
+	}
 	fmt.Println(minHeap)
+
+	for minHeap.IsEmpty() == false {
+		fmt.Printf("%v ", minHeap.Pop())
+	}
 }
